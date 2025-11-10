@@ -1,14 +1,15 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id("com.google.gms.google-services")
 }
 
 android {
-    namespace = "vishnu.project.habittracker"
+    namespace = "tees.habittracker.vishnus3358684"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "vishnu.project.habittracker"
+        applicationId = "tees.habittracker.vishnus3358684"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -69,4 +70,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(libs.firebase.database.ktx)
+
 }

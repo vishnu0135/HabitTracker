@@ -1,4 +1,4 @@
-package vishnu.project.habittracker
+package tees.habittracker.vishnus3358684
 
 import android.app.Activity
 import android.content.Intent

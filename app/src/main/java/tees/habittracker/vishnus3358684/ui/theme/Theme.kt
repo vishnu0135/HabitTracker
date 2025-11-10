@@ -1,6 +1,5 @@
-package vishnu.project.habittracker.ui.theme
+package tees.habittracker.vishnus3358684.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

@@ -1,4 +1,4 @@
-package vishnu.project.habittracker
+package tees.habittracker.vishnus3358684
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

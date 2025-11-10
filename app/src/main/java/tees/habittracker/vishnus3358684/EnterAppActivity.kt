@@ -1,9 +1,12 @@
-package vishnu.project.habittracker
+package tees.habittracker.vishnus3358684
 
+import android.R.attr.country
+import android.R.attr.password
+import android.R.attr.text
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.service.autofill.UserData
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -43,8 +46,8 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.google.firebase.database.FirebaseDatabase
 import kotlin.jvm.java
 
 class EnterAppActivity : ComponentActivity() {
@@ -115,12 +118,19 @@ fun EnterAppScreen() {
                     tint = Color.White
                 )
             },
-//            colors = TextFieldDefaults.outlinedTextFieldColors(
-//                focusedBorderColor = Color.Yellow,
-//                unfocusedBorderColor = Color.Yellow,
-//                focusedTextColor = Color.White,
-//                unfocusedTextColor = Color.White
-//            )
+            colors = TextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.Gray,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                focusedLabelColor = Color.White,
+                unfocusedLabelColor = Color.Gray,
+                focusedLeadingIconColor = Color.White,
+                unfocusedLeadingIconColor = Color.Gray,
+                focusedIndicatorColor = Color.White,
+                unfocusedIndicatorColor = Color.Gray,
+                cursorColor = Color.White
+            )
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -139,12 +149,19 @@ fun EnterAppScreen() {
                     tint = Color.White
                 )
             },
-//            colors = TextFieldDefaults.outlinedTextFieldColors(
-//                focusedBorderColor = Color.Yellow,
-//                unfocusedBorderColor = Color.Yellow,
-//                focusedTextColor = Color.White,
-//                unfocusedTextColor = Color.White
-//            )
+            colors = TextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.Gray,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                focusedLabelColor = Color.White,
+                unfocusedLabelColor = Color.Gray,
+                focusedLeadingIconColor = Color.White,
+                unfocusedLeadingIconColor = Color.Gray,
+                focusedIndicatorColor = Color.White,
+                unfocusedIndicatorColor = Color.Gray,
+                cursorColor = Color.White
+            )
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -154,17 +171,53 @@ fun EnterAppScreen() {
                 .clickable {
                     when {
                         userEmail.isEmpty() -> {
-//                            Toast.makeText(context, " Please Enter Mail", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, " Please Enter Mail", Toast.LENGTH_SHORT).show()
                         }
 
                         userPassword.isEmpty() -> {
-//                            Toast.makeText(context, " Please Enter Password", Toast.LENGTH_SHORT)
-//                                .show()
+                            Toast.makeText(context, " Please Enter Password", Toast.LENGTH_SHORT)
+                                .show()
                         }
 
                         else -> {
 
+                            val database = FirebaseDatabase.getInstance()
+                            val databaseReference = database.reference
+
+                            val sanitizedEmail = userEmail.replace(".", ",")
+
+                            databaseReference.child("AccountData").child(sanitizedEmail).get()
+                                .addOnSuccessListener { snapshot ->
+                                    if (snapshot.exists()) {
+                                        val userData =
+                                            snapshot.getValue(AccountData::class.java)
+                                        userData?.let {
+                                            if (userPassword == it.password) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Login Successfull",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+
+                                            } else {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Incorrect Credentials",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                    } else {
+                                        Toast.makeText(context, "No User Found", Toast.LENGTH_SHORT)
+                                            .show()
+                                    }
+                                }.addOnFailureListener { exception ->
+                                    println("Error retrieving data: ${exception.message}")
+                                }
+
                         }
+
+
 
                     }
                 }
@@ -198,8 +251,8 @@ fun EnterAppScreen() {
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .clickable {
-//                    context.startActivity(Intent(context, JoinAppActivity::class.java))
-//                    context.finish()
+                    context.startActivity(Intent(context, AccountRegisterActivity::class.java))
+                    context.finish()
                 },
             text = "Or SignUp For Account",
             textAlign = TextAlign.Center,
