@@ -198,6 +198,9 @@ fun EnterAppScreen() {
                                                     "Login Successfull",
                                                     Toast.LENGTH_SHORT
                                                 ).show()
+                                                context.startActivity(Intent(context, HomeScreenActivity::class.java))
+                                                context.finish()
+
 
                                             } else {
                                                 Toast.makeText(
