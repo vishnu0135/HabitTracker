@@ -1,6 +1,5 @@
 package tees.habittracker.vishnus3358684
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -44,6 +43,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.firebase.database.FirebaseDatabase
 
@@ -57,6 +57,12 @@ class AccountRegisterActivity : ComponentActivity() {
 }
 
 
+@Preview(showBackground = true)
+@Composable
+fun AccountRegisterScreenPreview() {
+    AccountRegisterScreen()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountRegisterScreen() {
@@ -65,7 +71,7 @@ fun AccountRegisterScreen() {
     var userEmail by remember { mutableStateOf("") }
     var userPassword by remember { mutableStateOf("") }
 
-    val context = LocalContext.current as Activity
+    val context = LocalContext.current.findActivity()
 
     Column(
         modifier = Modifier
@@ -271,7 +277,7 @@ fun AccountRegisterScreen() {
                                             "Registration Successful",
                                             Toast.LENGTH_SHORT
                                         ).show()
-                                        context.startActivity(
+                                        context!!.startActivity(
                                             Intent(
                                                 context,
                                                 EnterAppActivity::class.java
@@ -328,7 +334,7 @@ fun AccountRegisterScreen() {
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .clickable {
-                    context.startActivity(Intent(context, EnterAppActivity::class.java))
+                    context!!.startActivity(Intent(context, EnterAppActivity::class.java))
                     context.finish()
                 },
             text = "Or SignIn to Account",

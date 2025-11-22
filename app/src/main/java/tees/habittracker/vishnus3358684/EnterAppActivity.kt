@@ -4,6 +4,8 @@ import android.R.attr.country
 import android.R.attr.password
 import android.R.attr.text
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.os.Bundle
 import android.service.autofill.UserData
@@ -46,6 +48,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.firebase.database.FirebaseDatabase
 import kotlin.jvm.java
@@ -59,13 +62,19 @@ class EnterAppActivity : ComponentActivity() {
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun EnterAppScreenPreview() {
+    EnterAppScreen()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EnterAppScreen() {
     var userEmail by remember { mutableStateOf("") }
     var userPassword by remember { mutableStateOf("") }
 
-    val context = LocalContext.current as Activity
+    val context = LocalContext.current.findActivity()
 
     Column(
         modifier = Modifier
@@ -198,7 +207,7 @@ fun EnterAppScreen() {
                                                     "Login Successfull",
                                                     Toast.LENGTH_SHORT
                                                 ).show()
-                                                context.startActivity(Intent(context, HomeScreenActivity::class.java))
+                                                context!!.startActivity(Intent(context, HomeScreenActivity::class.java))
                                                 context.finish()
 
 
@@ -254,7 +263,7 @@ fun EnterAppScreen() {
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .clickable {
-                    context.startActivity(Intent(context, AccountRegisterActivity::class.java))
+                    context!!.startActivity(Intent(context, AccountRegisterActivity::class.java))
                     context.finish()
                 },
             text = "Or SignUp For Account",
@@ -268,4 +277,11 @@ fun EnterAppScreen() {
 
 
     }
+}
+
+
+fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }

@@ -54,6 +54,7 @@ class HomeScreenActivity : ComponentActivity() {
     }
 }
 
+
 @Composable
 fun HomeScreen()
 {
@@ -64,7 +65,6 @@ fun HomeScreen()
         
     )
     {
-
 
         Row(
             modifier = Modifier
