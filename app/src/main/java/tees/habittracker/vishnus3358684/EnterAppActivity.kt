@@ -1,14 +1,10 @@
 package tees.habittracker.vishnus3358684
 
-import android.R.attr.country
-import android.R.attr.password
-import android.R.attr.text
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.os.Bundle
-import android.service.autofill.UserData
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -51,7 +47,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.firebase.database.FirebaseDatabase
-import kotlin.jvm.java
 
 class EnterAppActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
