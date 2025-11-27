@@ -117,6 +117,9 @@ fun ConverterSplashScreen() {
             )
 
         Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(18.dp))
+
 
     }
 
