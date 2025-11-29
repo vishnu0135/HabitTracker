@@ -1,7 +1,5 @@
 package tees.habittracker.vishnus3358684
 
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,67 +15,114 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlin.jvm.java
+import tees.habittracker.vishnus3358684.database.HabitDatabase
+import tees.habittracker.vishnus3358684.database.HabitRepository
+import tees.habittracker.vishnus3358684.database.HabitViewModel
+import tees.habittracker.vishnus3358684.database.HabitViewModelFactory
+import tees.habittracker.vishnus3358684.ui.theme.HabitTrackerTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ConverterUserStatusCheck()
+            HabitTrackerTheme {
+                MyAppNavGraph()
+            }
         }
     }
 }
 
 @Composable
-fun ConverterUserStatusCheck() {
-    val context = LocalContext.current as Activity
-    var showSplash by remember { mutableStateOf(true) }
+fun MyAppNavGraph() {
+    val navController = rememberNavController()
+    val context = LocalContext.current
+    val database = HabitDatabase.getDatabase(context)
+    val repository = HabitRepository(database.habitDao())
+    val habitViewModel: HabitViewModel = viewModel(
+        factory = HabitViewModelFactory(repository)
+    )
 
-    DisposableEffect(Unit) {
-        val job = CoroutineScope(Dispatchers.Main).launch {
-            delay(3000)
-            showSplash = false
+    NavHost(
+        navController = navController,
+        startDestination = AppScreens.Splash.route
+    ) {
+        composable(AppScreens.Splash.route) {
+            HTStatusChecker(navController = navController)
         }
-        onDispose { job.cancel() }
+
+        composable(AppScreens.Login.route) {
+            EnterAppScreen(navController = navController)
+        }
+
+        composable(AppScreens.Register.route) {
+            AccountRegisterScreen(navController = navController)
+        }
+
+        composable(AppScreens.Home.route) {
+            HomeScreen(navController = navController, viewModel = habitViewModel)
+        }
+
+        composable(AppScreens.AddHabit.route) {
+            AddHabitScreen(viewModel = habitViewModel, navController = navController)
+        }
+
+        composable(AppScreens.ViewHabits.route) {
+            ViewHabitsScreen(viewModel = habitViewModel, navController = navController)
+        }
+    }
+}
+
+
+@Composable
+fun HTStatusChecker(navController: NavController) {
+
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        delay(3000)
+
+        if (UserPrefs.checkLoginStatus(context)) {
+            navController.navigate(AppScreens.Home.route) {
+                popUpTo(AppScreens.Splash.route) {
+                    inclusive = true
+                }
+            }
+        } else {
+            navController.navigate(AppScreens.Login.route) {
+                popUpTo(AppScreens.Splash.route) {
+                    inclusive = true
+                }
+            }
+        }
+
     }
 
-    if (showSplash) {
-        ConverterSplashScreen()
-
-    } else {
-        context.startActivity(Intent(context, EnterAppActivity::class.java))
-        context.finish()
-    }
-
+    HTSplashScreen()
 }
 
 @Composable
-fun ConverterSplashScreen() {
+fun HTSplashScreen() {
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                color = colorResource(id = R.color.bg_color),
+                color = MaterialTheme.colorScheme.background,
             ),
     ) {
 
@@ -87,7 +132,7 @@ fun ConverterSplashScreen() {
         ) {
 
             Image(
-                painter = painterResource(id = R.drawable.ic_habit), // Replace with your actual SVG drawable
+                painter = painterResource(id = R.drawable.ic_habit),
                 contentDescription = null,
                 modifier = Modifier
                     .size(100.dp)
@@ -100,18 +145,17 @@ fun ConverterSplashScreen() {
         Text(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             text = "Habit Tracker App",
-            color = colorResource(id = R.color.fg_color),
+            color = MaterialTheme.colorScheme.onBackground,
             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
 
             )
-
 
         Spacer(modifier = Modifier.weight(1f))
 
         Text(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             text = "Vishnu",
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
 
             )
@@ -127,6 +171,8 @@ fun ConverterSplashScreen() {
 
 @Preview(showBackground = true)
 @Composable
-fun ConverterSplashScreenPreview() {
-    ConverterSplashScreen()
+fun HTSplashScreenPreview() {
+    HabitTrackerTheme {
+        HTSplashScreen()
+    }
 }

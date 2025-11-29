@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.gms.google-services")
+    id("kotlin-kapt")
 }
 
 android {
@@ -63,6 +64,10 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
+    implementation(libs.androidx.navigation.runtime.ktx)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.compose.material3)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -71,5 +76,18 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.firebase.database.ktx)
+
+    implementation("androidx.compose.foundation:foundation:1.6.0")
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
+
+    // Room KTX
+//    implementation("androidx.room:room-ktx:2.6.1")
+
+// Room runtime
+    implementation("androidx.room:room-runtime:2.6.1")
+
+// Room annotation processor (REQUIRED)
+    kapt("androidx.room:room-compiler:2.6.1")
+
 
 }

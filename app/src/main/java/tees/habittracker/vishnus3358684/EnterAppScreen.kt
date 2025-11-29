@@ -13,9 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -42,26 +40,27 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import tees.habittracker.vishnus3358684.ui.theme.HabitTrackerTheme
 
 
 @Preview(showBackground = true)
 @Composable
-fun AccountRegisterScreenPreview() {
+fun EnterAppScreenPreview() {
     HabitTrackerTheme {
-        AccountRegisterScreen(navController = NavHostController(LocalContext.current))
+        EnterAppScreen(navController = NavHostController(LocalContext.current))
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AccountRegisterScreen(navController: NavController) {
-    var userName by remember { mutableStateOf("") }
-    var userAge by remember { mutableStateOf("") }
+fun EnterAppScreen(navController: NavController) {
+
     var userEmail by remember { mutableStateOf("") }
     var userPassword by remember { mutableStateOf("") }
-
     val context = LocalContext.current
 
     Column(
@@ -118,43 +117,6 @@ fun AccountRegisterScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp),
-            value = userName,
-            onValueChange = { userName = it },
-            placeholder = { Text("Enter Name") },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.AccountBox,
-                    contentDescription = "Name Icon"
-                )
-            },
-            colors = textFieldColors
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp),
-            value = userAge,
-            onValueChange = { userAge = it },
-            placeholder = { Text("Enter Age") },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Face,
-                    contentDescription = "Age Icon"
-                )
-            },
-            colors = textFieldColors
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-
-        OutlinedTextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp),
             value = userEmail,
             onValueChange = { userEmail = it },
             placeholder = { Text("Enter Email") },
@@ -190,14 +152,6 @@ fun AccountRegisterScreen(navController: NavController) {
         Button(
             onClick = {
                 when {
-                    userName.isEmpty() -> {
-                        Toast.makeText(context, " Please Enter Name", Toast.LENGTH_SHORT).show()
-                    }
-
-                    userAge.isEmpty() -> {
-                        Toast.makeText(context, " Please Enter Age", Toast.LENGTH_SHORT).show()
-                    }
-
                     userEmail.isEmpty() -> {
                         Toast.makeText(context, " Please Enter Mail", Toast.LENGTH_SHORT).show()
                     }
@@ -208,51 +162,52 @@ fun AccountRegisterScreen(navController: NavController) {
                     }
 
                     else -> {
-
-                        val accountData = AccountData(
-                            fullname = userName,
-                            email = userEmail,
-                            age = userAge,
-                            password = userPassword
-                        )
-
                         val db = FirebaseDatabase.getInstance()
                         val ref = db.getReference("AccountData")
-
-                        ref.child(accountData.email.replace(".", ","))
-                            .setValue(accountData)
-                            .addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-
-                                    Toast.makeText(
-                                        context,
-                                        "Registration Successful",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-
-                                    navController.navigate(AppScreens.Login.route) {
-                                        popUpTo(AppScreens.Register.route) {
-                                            inclusive = true
+                        ref.orderByChild("email").equalTo(userEmail)
+                            .addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onDataChange(snapshot: DataSnapshot) {
+                                    if (snapshot.exists()) {
+                                        for (child in snapshot.children) {
+                                            val accountData = child.getValue(AccountData::class.java)
+                                            if (accountData?.password == userPassword) {
+                                                UserPrefs.markLoginStatus(context, true)
+                                                Toast.makeText(
+                                                    context,
+                                                    "Login Successful",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                navController.navigate(AppScreens.Home.route) {
+                                                    popUpTo(AppScreens.Login.route) {
+                                                        inclusive = true
+                                                    }
+                                                }
+                                            } else {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Invalid Password",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
                                         }
+                                    } else {
+                                        Toast.makeText(context, "User not found", Toast.LENGTH_SHORT)
+                                            .show()
                                     }
+                                }
 
-                                } else {
+                                override fun onCancelled(error: DatabaseError) {
                                     Toast.makeText(
                                         context,
-                                        "User Registration Failed: ${task.exception?.message}",
+                                        "Login Failed: ${error.message}",
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
-                            }
-                            .addOnFailureListener { exception ->
-                                Toast.makeText(
-                                    context,
-                                    "User Registration Failed: ${exception.message}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
+
+                            })
                     }
                 }
+
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -265,7 +220,7 @@ fun AccountRegisterScreen(navController: NavController) {
             )
         ) {
             Text(
-                text = "Register", // Changed from SignIn to Register for clarity
+                text = "Login",
                 style = MaterialTheme.typography.titleMedium
             )
         }
@@ -274,16 +229,12 @@ fun AccountRegisterScreen(navController: NavController) {
 
         TextButton(
             onClick = {
-                navController.navigate(AppScreens.Login.route) {
-                    popUpTo(AppScreens.Register.route) {
-                        inclusive = true
-                    }
-                }
+                navController.navigate(AppScreens.Register.route)
             },
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
             Text(
-                text = "Or SignIn to Account",
+                text = "Or Create New Account",
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.titleMedium
             )
@@ -294,10 +245,3 @@ fun AccountRegisterScreen(navController: NavController) {
 
     }
 }
-
-data class AccountData(
-    val fullname: String = "",
-    val age: String = "",
-    val email: String = "",
-    val password: String = ""
-)
