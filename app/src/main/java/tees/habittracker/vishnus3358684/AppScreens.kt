@@ -9,5 +9,6 @@ sealed class AppScreens(val route: String) {
 
     object AddHabit : AppScreens("add_habit")
     object ViewHabits : AppScreens("view_habit")
+    object ViewHabitDetails : AppScreens("view_habit")
 
 }

@@ -162,6 +162,17 @@ fun EnterAppScreen(navController: NavController) {
                     }
 
                     else -> {
+                        navController.navigate(AppScreens.Home.route) {
+                            popUpTo(AppScreens.Login.route) {
+                                inclusive = true
+                            }
+                        }
+
+                        return@Button
+
+                        //TODO Uncomment this
+
+
                         val db = FirebaseDatabase.getInstance()
                         val ref = db.getReference("AccountData")
                         ref.orderByChild("email").equalTo(userEmail)

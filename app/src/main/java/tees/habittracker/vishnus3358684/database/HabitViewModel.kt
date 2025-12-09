@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import tees.habittracker.vishnus3358684.Habit
+import kotlin.jvm.java
+
 
 class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
 
@@ -29,21 +31,39 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
         initialValue = emptyList()
     )
 
-    fun saveHabit() {
+    // INSERT
+    suspend fun saveHabit(): Long {
+        val habit = Habit(
+            title = title,
+            description = description,
+            category = category,
+            priority = priority,
+            timeOfDay = timeOfDay,
+            startDate = startDate,
+            reminderTime = reminderTime,
+            frequency = frequency
+        )
+
+        val id = repository.insert(habit)
+        clearForm()
+        return id
+    }
+
+    // UPDATE
+    suspend fun updateHabit(habit: Habit) {
+        repository.update(habit)
+    }
+
+    // DELETE
+    fun deleteHabit(habit: Habit) {
         viewModelScope.launch {
-            val habit = Habit(
-                title = title,
-                description = description,
-                category = category,
-                priority = priority,
-                timeOfDay = timeOfDay,
-                startDate = startDate,
-                reminderTime = reminderTime,
-                frequency = frequency
-            )
-            repository.insert(habit)
-            clearForm()
+            repository.delete(habit)
         }
+    }
+
+    // Load for editing
+    suspend fun loadHabit(habitId: Int): Habit? {
+        return repository.getHabitById(habitId)
     }
 
     private fun clearForm() {
@@ -58,7 +78,8 @@ class HabitViewModel(private val repository: HabitRepository) : ViewModel() {
     }
 }
 
-class HabitViewModelFactory(private val repository: HabitRepository) : ViewModelProvider.Factory {
+class HabitViewModelFactory(private val repository: HabitRepository) :
+    ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(HabitViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
@@ -67,3 +88,4 @@ class HabitViewModelFactory(private val repository: HabitRepository) : ViewModel
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+

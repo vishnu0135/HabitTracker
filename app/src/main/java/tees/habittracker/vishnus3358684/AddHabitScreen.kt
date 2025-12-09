@@ -1,5 +1,14 @@
 package tees.habittracker.vishnus3358684
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,7 +30,6 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
@@ -50,13 +58,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.coroutines.launch
 import tees.habittracker.vishnus3358684.database.HabitViewModel
+import tees.habittracker.vishnus3358684.utils.HabitNotificationScheduler
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -79,6 +90,38 @@ fun AddHabitScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    val context = LocalContext.current
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Toast.makeText(context, "Notification permission granted!", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(
+                context,
+                "Notification permission denied. Reminders may not show.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    val exactAlarmPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (HabitNotificationScheduler.canScheduleExactAlarms(context)) {
+            Toast.makeText(context, "Alarms & reminders permission granted!", Toast.LENGTH_SHORT)
+                .show()
+        } else {
+            Toast.makeText(
+                context,
+                "Alarms & reminders permission denied. Exact reminders may not work.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
 
     Scaffold(
         topBar = {
@@ -207,24 +250,127 @@ fun AddHabitScreen(
             // Save
             Button(
                 onClick = {
-                    viewModel.saveHabit()
-                    scope.launch {
-                        snackbarHostState.showSnackbar("Habit saved")
-                        navController.popBackStack()
+                    if (viewModel.title.isNotBlank() &&
+                        viewModel.reminderTime.isNotBlank() &&
+                        viewModel.frequency.isNotBlank()
+                    ) {
+
+                        val newHabit = Habit(
+                            title = viewModel.title,
+                            description = viewModel.description,
+                            category = viewModel.category,
+                            priority = viewModel.priority,
+                            timeOfDay = viewModel.timeOfDay,
+                            startDate = viewModel.startDate,
+                            reminderTime = viewModel.reminderTime,
+                            frequency = viewModel.frequency
+                        )
+
+                        // ANDROID 13+ handling notification + alarm permissions
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+
+                            val hasNotif = ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            ) == PackageManager.PERMISSION_GRANTED
+
+                            if (!hasNotif) {
+                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                Toast.makeText(
+                                    context,
+                                    "Enable notification permission!",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                return@Button
+                            }
+
+                            if (!HabitNotificationScheduler.canScheduleExactAlarms(context)) {
+                                val intent =
+                                    Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                        data = Uri.fromParts("package", context.packageName, null)
+                                    }
+                                exactAlarmPermissionLauncher.launch(intent)
+                                Toast.makeText(
+                                    context,
+                                    "Enable 'Alarms & reminders' permission!",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                return@Button
+                            }
+
+                            // All permission OK → Save Habit & schedule alarms
+                            scope.launch {
+                                val habitId = viewModel.saveHabit()
+                                HabitNotificationScheduler.scheduleHabitNotification(
+                                    context = context,
+                                    habitId = habitId.toInt(),
+                                    title = newHabit.title,
+                                    description = newHabit.description,
+                                    reminderTime = newHabit.reminderTime,
+                                    frequency = newHabit.frequency
+                                )
+                                navController.popBackStack()
+                            }
+                        }
+
+                        // ANDROID 12 (API 31–32)
+                        else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+
+                            if (!HabitNotificationScheduler.canScheduleExactAlarms(context)) {
+                                val intent =
+                                    Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                        data = Uri.fromParts("package", context.packageName, null)
+                                    }
+                                exactAlarmPermissionLauncher.launch(intent)
+                                Toast.makeText(
+                                    context,
+                                    "Please allow exact alarms in settings.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                return@Button
+                            }
+
+                            scope.launch {
+                                val habitId = viewModel.saveHabit()
+                                HabitNotificationScheduler.scheduleHabitNotification(
+                                    context = context,
+                                    habitId = habitId.toInt(),
+                                    title = newHabit.title,
+                                    description = newHabit.description,
+                                    reminderTime = newHabit.reminderTime,
+                                    frequency = newHabit.frequency
+                                )
+                                navController.popBackStack()
+                            }
+                        }
+
+                        // ANDROID 11 and below
+                        else {
+                            scope.launch {
+                                val habitId = viewModel.saveHabit()
+                                HabitNotificationScheduler.scheduleHabitNotification(
+                                    context = context,
+                                    habitId = habitId.toInt(),
+                                    title = newHabit.title,
+                                    description = newHabit.description,
+                                    reminderTime = newHabit.reminderTime,
+                                    frequency = newHabit.frequency
+                                )
+                                navController.popBackStack()
+                            }
+                        }
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Please fill all required fields!",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                }
             ) {
-                Text(
-                    "Save Habit",
-                    fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Save Habit")
             }
+
 
             Spacer(Modifier.height(24.dp))
         }
@@ -452,6 +598,8 @@ fun TimePickerField(
 }
 
 
+
+
 @Entity(tableName = "habits")
 data class Habit(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
@@ -464,3 +612,4 @@ data class Habit(
     val reminderTime: String,
     val frequency: String
 )
+

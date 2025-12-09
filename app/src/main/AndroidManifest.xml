@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/icon_habit_tracker_app"
@@ -10,15 +14,21 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.HabitTracker"
         tools:targetApi="31">
-        <activity
-            android:name=".HomeScreenActivity"
-            android:exported="false" />
-        <activity
-            android:name=".AccountRegisterActivity"
-            android:exported="false" />
-        <activity
-            android:name=".EnterAppActivity"
-            android:exported="false" />
+
+
+
+        <receiver
+            android:name=".utils.HabitReminderReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="ACTION_MEDICINE_REMINDER" />
+                <action android:name="ACTION_REFILL_REMINDER" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" /> <!-- To re-schedule alarms after reboot -->
+            </intent-filter>
+        </receiver>
+
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

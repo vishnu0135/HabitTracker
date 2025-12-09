@@ -25,20 +25,33 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import kotlinx.coroutines.delay
 import tees.habittracker.vishnus3358684.database.HabitDatabase
 import tees.habittracker.vishnus3358684.database.HabitRepository
 import tees.habittracker.vishnus3358684.database.HabitViewModel
 import tees.habittracker.vishnus3358684.database.HabitViewModelFactory
 import tees.habittracker.vishnus3358684.ui.theme.HabitTrackerTheme
+import tees.habittracker.vishnus3358684.utils.NotificationHelper
 
 class MainActivity : ComponentActivity() {
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        NotificationHelper.createHabitChannel(this)
+
+
+//        permissionHandler = NotificationPermissionHandler(this)
+//        permissionHandler.requestPermissionsIfNeeded()
+
+
         setContent {
             HabitTrackerTheme {
                 MyAppNavGraph()
@@ -84,6 +97,27 @@ fun MyAppNavGraph() {
         composable(AppScreens.ViewHabits.route) {
             ViewHabitsScreen(viewModel = habitViewModel, navController = navController)
         }
+
+        composable(
+            route = "habitDetails/{habitId}",
+            arguments = listOf(navArgument("habitId") { type = NavType.IntType })
+        ) { backStackEntry ->
+
+            val habitId = backStackEntry.arguments?.getInt("habitId") ?: 0
+
+            HabitDetailsScreen(
+                habitId = habitId,
+                viewModel = habitViewModel,
+                navController = navController,
+                onEdit = {
+                    navController.navigate("editHabit/$habitId")
+                },
+                onDelete = { habit ->
+                    habitViewModel.deleteHabit(habit)
+                }
+            )
+        }
+
     }
 }
 
