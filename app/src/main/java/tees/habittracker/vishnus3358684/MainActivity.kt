@@ -31,10 +31,19 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import kotlinx.coroutines.delay
+import tees.habittracker.vishnus3358684.database.HabitCompletionRepository
 import tees.habittracker.vishnus3358684.database.HabitDatabase
 import tees.habittracker.vishnus3358684.database.HabitRepository
 import tees.habittracker.vishnus3358684.database.HabitViewModel
 import tees.habittracker.vishnus3358684.database.HabitViewModelFactory
+import tees.habittracker.vishnus3358684.managehabits.AboutUsScreen
+import tees.habittracker.vishnus3358684.managehabits.AnalyticsScreen
+import tees.habittracker.vishnus3358684.managehabits.EditHabitScreen
+import tees.habittracker.vishnus3358684.managehabits.HabitAnalyticsDetailScreen
+import tees.habittracker.vishnus3358684.managehabits.HabitCheckInScreen
+import tees.habittracker.vishnus3358684.managehabits.HabitDetailsScreen
+import tees.habittracker.vishnus3358684.managehabits.TodayHabitsScreen
+import tees.habittracker.vishnus3358684.managehabits.ViewHabitsScreen
 import tees.habittracker.vishnus3358684.ui.theme.HabitTrackerTheme
 import tees.habittracker.vishnus3358684.utils.NotificationHelper
 
@@ -47,27 +56,25 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         NotificationHelper.createHabitChannel(this)
 
-
-//        permissionHandler = NotificationPermissionHandler(this)
-//        permissionHandler.requestPermissionsIfNeeded()
-
-
         setContent {
             HabitTrackerTheme {
-                MyAppNavGraph()
+                HabitTrackerScreens()
             }
         }
     }
 }
 
 @Composable
-fun MyAppNavGraph() {
+fun HabitTrackerScreens() {
+
     val navController = rememberNavController()
     val context = LocalContext.current
     val database = HabitDatabase.getDatabase(context)
     val repository = HabitRepository(database.habitDao())
+    val completionRepository = HabitCompletionRepository(database.habitCompletionDao())
+
     val habitViewModel: HabitViewModel = viewModel(
-        factory = HabitViewModelFactory(repository)
+        factory = HabitViewModelFactory(repository,completionRepository)
     )
 
     NavHost(
@@ -77,6 +84,11 @@ fun MyAppNavGraph() {
         composable(AppScreens.Splash.route) {
             HTStatusChecker(navController = navController)
         }
+
+        composable("todayHabits") {
+            TodayHabitsScreen(habitViewModel, navController)
+        }
+
 
         composable(AppScreens.Login.route) {
             EnterAppScreen(navController = navController)
@@ -98,6 +110,35 @@ fun MyAppNavGraph() {
             ViewHabitsScreen(viewModel = habitViewModel, navController = navController)
         }
 
+        composable(AppScreens.Profile.route)
+        {
+            ProfileScreen(navController = navController)
+        }
+
+        composable(AppScreens.AboutUs.route)
+        {
+            AboutUsScreen(navController = navController)
+        }
+
+
+        composable("analytics") {
+            AnalyticsScreen(viewModel=habitViewModel, navController)
+        }
+
+        composable(
+            route = "habitAnalytics/{habitId}"
+        ) { backStackEntry ->
+            val habitId = backStackEntry.arguments?.getString("habitId")!!.toInt()
+            HabitAnalyticsDetailScreen(
+                habitId = habitId,
+                viewModel = habitViewModel,
+                navController = navController
+            )
+        }
+
+
+
+
         composable(
             route = "habitDetails/{habitId}",
             arguments = listOf(navArgument("habitId") { type = NavType.IntType })
@@ -117,6 +158,31 @@ fun MyAppNavGraph() {
                 }
             )
         }
+
+        composable(
+            route = "editHabit/{habitId}",
+            arguments = listOf(navArgument("habitId") { type = NavType.IntType })
+        ) { backStackEntry ->
+
+            val habitId = backStackEntry.arguments?.getInt("habitId") ?: 0
+
+            EditHabitScreen(
+                habitId = habitId,
+                viewModel = habitViewModel,
+                navController = navController
+            )
+        }
+
+
+        composable("checkIn/{habitId}") {
+            val habitId = it.arguments?.getInt("habitId") ?: 0
+            HabitCheckInScreen(
+                habitId = habitId,
+                viewModel = habitViewModel,
+                navController = navController
+            )
+        }
+
 
     }
 }

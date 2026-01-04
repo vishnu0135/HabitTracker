@@ -31,6 +31,22 @@ object HabitNotificationScheduler {
 
     const val CHANNEL_ID = "habit_channel"
 
+    fun cancelHabitReminder(context: Context, habitId: Int) {
+        val intent = Intent(context, HabitReminderReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            habitId,
+            intent,
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        pendingIntent?.let {
+            val alarmManager = context.getSystemService(AlarmManager::class.java)
+            alarmManager.cancel(it)
+        }
+    }
+
+
     fun canScheduleExactAlarms(context: Context): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val alarmManager = context.getSystemService(AlarmManager::class.java)
@@ -66,7 +82,6 @@ object HabitNotificationScheduler {
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
 
-            // If time already passed today → schedule tomorrow
             if (before(Calendar.getInstance())) {
                 add(Calendar.DAY_OF_YEAR, 1)
             }
@@ -81,7 +96,7 @@ object HabitNotificationScheduler {
             putExtra("reminderTime", reminderTime)
         }
 
-        val requestCode = habitId // keep same unique id you used before
+        val requestCode = habitId
 
         val pendingIntent = PendingIntent.getBroadcast(
             context,
@@ -116,7 +131,7 @@ object HabitNotificationScheduler {
                     )
                 }
 
-                else -> { // Custom or one-time
+                else -> {
                     alarmManager.setExactAndAllowWhileIdle(
                         AlarmManager.RTC_WAKEUP,
                         calendar.timeInMillis,
@@ -125,13 +140,10 @@ object HabitNotificationScheduler {
                 }
             }
         } catch (e: Exception) {
-            // scheduling failed for some reason
             Toast.makeText(context, "Failed to schedule reminder: ${e.message}", Toast.LENGTH_LONG).show()
             return false
         }
 
-        // Now verify: check whether a PendingIntent with same request code exists.
-        // Use FLAG_NO_CREATE so we don't create a new one.
         val createdPending = PendingIntent.getBroadcast(
             context,
             requestCode,

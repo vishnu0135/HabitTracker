@@ -46,7 +46,6 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import tees.habittracker.vishnus3358684.ui.theme.HabitTrackerTheme
 
-
 @Preview(showBackground = true)
 @Composable
 fun EnterAppScreenPreview() {
@@ -77,7 +76,7 @@ fun EnterAppScreen(navController: NavController) {
         ) {
 
             Image(
-                painter = painterResource(id = R.drawable.ic_habit), // Replace with your actual SVG drawable
+                painter = painterResource(id = R.drawable.ic_habit),
                 contentDescription = null,
                 modifier = Modifier
                     .size(100.dp)
@@ -162,15 +161,6 @@ fun EnterAppScreen(navController: NavController) {
                     }
 
                     else -> {
-                        navController.navigate(AppScreens.Home.route) {
-                            popUpTo(AppScreens.Login.route) {
-                                inclusive = true
-                            }
-                        }
-
-                        return@Button
-
-                        //TODO Uncomment this
 
 
                         val db = FirebaseDatabase.getInstance()
@@ -183,6 +173,10 @@ fun EnterAppScreen(navController: NavController) {
                                             val accountData = child.getValue(AccountData::class.java)
                                             if (accountData?.password == userPassword) {
                                                 UserPrefs.markLoginStatus(context, true)
+                                                UserPrefs.saveName(context,accountData.fullname)
+                                                UserPrefs.saveEmail(context,accountData.email)
+                                                UserPrefs.saveAge(context,accountData.age.toString())
+
                                                 Toast.makeText(
                                                     context,
                                                     "Login Successful",

@@ -17,7 +17,7 @@ class HabitReminderReceiver : BroadcastReceiver() {
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         val notification = NotificationCompat.Builder(context, HabitNotificationScheduler.CHANNEL_ID)
-            .setSmallIcon(R.drawable.icon_habit_tracker_app) // change icon
+            .setSmallIcon(R.drawable.icon_habit_tracker_app)
             .setContentTitle(title)
             .setContentText(description)
             .setAutoCancel(true)

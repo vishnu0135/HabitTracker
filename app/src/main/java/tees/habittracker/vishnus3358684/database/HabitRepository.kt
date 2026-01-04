@@ -23,5 +23,11 @@ class HabitRepository(private val dao: HabitDao) {
     suspend fun getHabitById(habitId: Int): Habit? {
         return dao.getHabitById(habitId)
     }
+
+    suspend fun getAllHabitsOnce(): List<Habit> {
+        return dao.getAllHabitsOnce()
+    }
+
+
 }
 

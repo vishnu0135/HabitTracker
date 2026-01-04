@@ -14,19 +14,53 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.ContactSupport
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.ListAlt
+import androidx.compose.material.icons.filled.Today
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -40,8 +74,10 @@ import androidx.navigation.NavHostController
 import kotlinx.coroutines.delay
 import tees.habittracker.vishnus3358684.database.HabitViewModel
 import tees.habittracker.vishnus3358684.ui.theme.HabitTrackerTheme
+import tees.habittracker.vishnus3358684.ui.theme.PrimaryC1
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 @Preview(showBackground = true)
 @Composable
@@ -50,7 +86,17 @@ fun HomeScreenPreview() {
         HomeScreenContent(
             navController = NavHostController(LocalContext.current),
             habits = listOf(
-                Habit(1, "Singing Practice", "Practice for 30 mins", "Music", "High", "Morning", "20 Nov 2023", "10:00 AM", "Daily"),
+                Habit(
+                    1,
+                    "Singing Practice",
+                    "Practice for 30 mins",
+                    "Music",
+                    "High",
+                    "Morning",
+                    "20 Nov 2023",
+                    "10:00 AM",
+                    "Daily"
+                ),
             )
         )
     }
@@ -60,6 +106,66 @@ fun HomeScreenPreview() {
 fun HomeScreen(navController: NavController, viewModel: HabitViewModel) {
     val habits by viewModel.allHabits.collectAsState()
     HomeScreenContent(navController = navController, habits = habits)
+}
+
+
+@Composable
+fun HomeScreenAppBar(navController: NavController) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(PrimaryC1)
+            .padding(top = 36.dp, bottom = 12.dp, start = 12.dp, end = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        IconButton(onClick = {
+            navController.navigate(AppScreens.Profile.route)
+
+        }) {
+            Icon(
+                imageVector = Icons.Default.AccountCircle,
+                contentDescription = "Account",
+                tint = Color.White,
+                modifier = Modifier.size(48.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "Hello User 👋",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+
+            val sdf = SimpleDateFormat("dd MMM", Locale.getDefault())
+            val currentDate = sdf.format(Date())
+            Text(
+                text = "Today $currentDate",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.White
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        IconButton(onClick = {
+            navController.navigate(AppScreens.AboutUs.route)
+
+        }) {
+            Icon(
+                imageVector = Icons.Default.ContactSupport,
+                contentDescription = "Info",
+                tint = Color.White,
+                modifier = Modifier.size(48.dp)
+            )
+        }
+
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,12 +187,31 @@ fun HomeScreenContent(navController: NavController, habits: List<Habit>) {
         when (selectedTimeChip) {
             "Morning" -> habit.timeOfDay == "Morning"
             "Afternoon" -> habit.timeOfDay == "Afternoon" || habit.timeOfDay == "Mid-day"
-            "Evening" -> habit.timeOfDay == "Night" // Assuming "Evening" corresponds to "Night"
+            "Evening" -> habit.timeOfDay == "Evening"
             else -> false
         }
     }
 
     Scaffold(
+        topBar = {
+            HomeScreenAppBar(navController)
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    navController.navigate(AppScreens.AddHabit.route)
+                },
+                containerColor = Color.Black,
+                contentColor = Color.White,
+                shape = CircleShape
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Habit"
+                )
+            }
+        },
+        floatingActionButtonPosition = FabPosition.End,
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
@@ -97,50 +222,8 @@ fun HomeScreenContent(navController: NavController, habits: List<Habit>) {
                 .padding(bottom = 16.dp)
         ) {
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.outline_account_circle_24),
-                    contentDescription = null,
-                    modifier = Modifier.size(48.dp)
-                )
+            Spacer(modifier = Modifier.height(8.dp))
 
-                Spacer(modifier = Modifier.weight(1f))
-
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Hello User 👋",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-
-                    val sdf = SimpleDateFormat("dd MMM", Locale.getDefault())
-                    val currentDate = sdf.format(Date())
-                    Text(
-                        text = "Today $currentDate",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                    )
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                Image(
-                    painter = painterResource(id = R.drawable.outline_add_circle_24),
-                    contentDescription = "Add Habit",
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clickable {
-                            navController.navigate(AppScreens.AddHabit.route)
-                        }
-                )
-            }
 
             HorizontalPager(
                 state = pagerState,
@@ -188,17 +271,7 @@ fun HomeScreenContent(navController: NavController, habits: List<Habit>) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = { navController.navigate(AppScreens.ViewHabits.route) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-            ) {
-                Text("View All Habits", color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
-            }
-
+            HomeNavigationRow(navController)
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -211,7 +284,6 @@ fun HomeScreenContent(navController: NavController, habits: List<Habit>) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            /** Time Chips **/
             TimeChipsRow(
                 selected = selectedTimeChip,
                 onSelected = { selectedTimeChip = it }
@@ -219,7 +291,6 @@ fun HomeScreenContent(navController: NavController, habits: List<Habit>) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            /** Filtered Habit List **/
             if (filteredHabits.isEmpty()) {
                 Box(
                     modifier = Modifier
@@ -246,6 +317,83 @@ fun HomeScreenContent(navController: NavController, habits: List<Habit>) {
         }
     }
 }
+
+@Composable
+fun HomeNavigationRow(navController: NavController) {
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+
+        HomeNavCard(
+            title = "My Habits",
+            icon = Icons.Default.ListAlt,
+            onClick = { navController.navigate(AppScreens.ViewHabits.route) },
+            modifier = Modifier.weight(1f)
+        )
+
+        HomeNavCard(
+            title = "Analytics",
+            icon = Icons.Default.BarChart,
+            onClick = { navController.navigate("analytics") },
+            modifier = Modifier.weight(1f)
+
+        )
+
+        HomeNavCard(
+            title = "Today",
+            icon = Icons.Default.Today,
+            onClick = { navController.navigate("todayHabits") },
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+
+@Composable
+fun HomeNavCard(
+    title: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier
+) {
+    Card(
+        modifier = modifier
+            .height(110.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(22.dp),
+        elevation = CardDefaults.cardElevation(8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(28.dp)
+            )
+
+            Text(
+                text = title,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+    }
+}
+
 
 @Composable
 fun TimeChipsRow(selected: String, onSelected: (String) -> Unit) {
@@ -316,44 +464,3 @@ fun HabitCard(habit: Habit) {
     }
 }
 
-
-@Composable
-fun RequestNotificationPermissionsIfNeeded() {
-    val context = LocalContext.current
-    val activity = context as ComponentActivity
-
-    // Launcher for POST_NOTIFICATIONS
-    val notificationPermissionLauncher =
-        rememberLauncherForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { isGranted ->
-            // handle result if needed
-        }
-
-    LaunchedEffect(Unit) {
-
-        // 1️⃣ Android 13+ requires POST_NOTIFICATIONS
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val granted = ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-
-            if (!granted) {
-                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-
-        // 2️⃣ Android 12+ exact alarm check (cannot use launcher, requires intent)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val alarmManager =
-                context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-            if (!alarmManager.canScheduleExactAlarms()) {
-                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                context.startActivity(intent)
-            }
-        }
-    }
-}

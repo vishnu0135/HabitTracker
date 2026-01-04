@@ -14,3 +14,6 @@ val Pink40 = Color(0xFF7D5260)
 val LiteP = Color(0xFFffedea)
 val DarkP = Color(0xFF010304)
 
+
+val PrimaryC1 = Color(0xFF020404)
+

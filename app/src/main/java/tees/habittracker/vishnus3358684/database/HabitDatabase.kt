@@ -8,13 +8,15 @@ import tees.habittracker.vishnus3358684.Habit
 
 
 @Database(
-    entities = [Habit::class],
-    version = 1,
+    entities = [Habit::class, HabitCompletion::class],
+    version = 2,
     exportSchema = false
 )
 abstract class HabitDatabase : RoomDatabase() {
 
     abstract fun habitDao(): HabitDao
+    abstract fun habitCompletionDao(): HabitCompletionDao
+
 
     companion object {
         @Volatile

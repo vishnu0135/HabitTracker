@@ -3,6 +3,7 @@ package tees.habittracker.vishnus3358684
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Paint
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -30,6 +31,7 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
@@ -56,8 +58,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -72,19 +76,16 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// ---------- AddHabitScreen ----------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddHabitScreen(
     viewModel: HabitViewModel,
     navController: NavController
 ) {
-    // sample lists
     val categories = listOf("Health", "Study", "Fitness", "Self-Care", "Mindfulness")
     val priorities = listOf("Low", "Normal", "High")
     val frequencyList = listOf("Daily", "Weekly", "Custom")
 
-    // keep dialog states at top-level of screen
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
 
@@ -136,9 +137,9 @@ fun AddHabitScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color.Black,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
                 )
             )
         },
@@ -152,7 +153,6 @@ fun AddHabitScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            // Title
             OutlinedTextField(
                 value = viewModel.title,
                 onValueChange = { viewModel.title = it },
@@ -162,7 +162,6 @@ fun AddHabitScreen(
             )
             Spacer(Modifier.height(12.dp))
 
-            // Description
             OutlinedTextField(
                 value = viewModel.description,
                 onValueChange = { viewModel.description = it },
@@ -173,7 +172,6 @@ fun AddHabitScreen(
             )
             Spacer(Modifier.height(16.dp))
 
-            // Category (Exposed dropdown)
             Text("Category", fontWeight = FontWeight.Bold)
             SimpleExposedDropdown(
                 selected = viewModel.category,
@@ -183,7 +181,6 @@ fun AddHabitScreen(
             )
             Spacer(Modifier.height(16.dp))
 
-            // Priority
             Text("Priority", fontWeight = FontWeight.Bold)
             SimpleExposedDropdown(
                 selected = viewModel.priority,
@@ -193,12 +190,10 @@ fun AddHabitScreen(
             )
             Spacer(Modifier.height(16.dp))
 
-            // Time of day chips
             Text("Time of Day", fontWeight = FontWeight.Bold)
             TimeOfDayChips(viewModel)
             Spacer(Modifier.height(16.dp))
 
-            // Start Date (opens DatePicker dialog)
             DatePickerField(
                 label = "Start Date",
                 selectedDate = viewModel.startDate,
@@ -217,7 +212,6 @@ fun AddHabitScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Reminder time (opens TimePicker)
             TimePickerField(
                 label = "Reminder Time",
                 selectedTime = viewModel.reminderTime,
@@ -236,19 +230,15 @@ fun AddHabitScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Frequency
-            Text("Frequency", fontWeight = FontWeight.Bold)
-            SimpleExposedDropdown(
-                selected = viewModel.frequency,
-                items = frequencyList,
-                placeholder = "Select frequency",
-                onSelected = { viewModel.frequency = it }
-            )
 
             Spacer(Modifier.height(24.dp))
 
-            // Save
             Button(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Black,
+                    contentColor = Color.White
+                ),
                 onClick = {
                     if (viewModel.title.isNotBlank() &&
                         viewModel.reminderTime.isNotBlank() &&
@@ -383,7 +373,6 @@ fun DatePickerDialogUI(
     onDismiss: () -> Unit,
     onDateSelected: (String) -> Unit
 ) {
-    // IMPORTANT: State must be outside dialog content block
     val datePickerState = rememberDatePickerState()
 
     DatePickerDialog(
@@ -407,7 +396,6 @@ fun DatePickerDialogUI(
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancel") }
         },
-        // THE FIX → always use named param for content
         content = {
             DatePicker(state = datePickerState)
         }
@@ -420,9 +408,8 @@ fun ShowTimePickerDialog(
     onDismiss: () -> Unit,
     onTimeSelected: (String) -> Unit
 ) {
-    // keep slider state stable across recompositions
-    var hour by remember { mutableStateOf(12f) }   // 0..23
-    var minute by remember { mutableStateOf(0f) }  // 0..59
+    var hour by remember { mutableStateOf(12f) }
+    var minute by remember { mutableStateOf(0f) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -447,7 +434,6 @@ fun ShowTimePickerDialog(
                 Text("Cancel")
             }
         },
-        // <-- use named 'text' slot so the compiler knows this lambda is the dialog body
         text = {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Select time", fontWeight = FontWeight.Bold)
@@ -472,12 +458,10 @@ fun ShowTimePickerDialog(
                 )
             }
         }
-        // no trailing lambda here
     )
 }
 
 
-// ---------- SimpleExposedDropdown using Material3's exposed dropdown ----------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SimpleExposedDropdown(
@@ -487,7 +471,7 @@ fun SimpleExposedDropdown(
     onSelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    // ExposedDropdownMenuBox anchors menu automatically
+
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
@@ -541,7 +525,6 @@ fun TimeOfDayChips(viewModel: HabitViewModel) {
     }
 }
 
-// ---------- DatePickerField (opens dialog via onOpenRequest) ----------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerField(
@@ -569,7 +552,6 @@ fun DatePickerField(
     }
 }
 
-// ---------- TimePickerField (opens dialog via onOpenRequest, simple display) ----------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimePickerField(

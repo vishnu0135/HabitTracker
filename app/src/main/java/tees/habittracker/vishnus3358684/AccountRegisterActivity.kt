@@ -78,7 +78,7 @@ fun AccountRegisterScreen(navController: NavController) {
         ) {
 
             Image(
-                painter = painterResource(id = R.drawable.ic_habit), // Replace with your actual SVG drawable
+                painter = painterResource(id = R.drawable.ic_habit),
                 contentDescription = null,
                 modifier = Modifier
                     .size(100.dp)
@@ -87,7 +87,6 @@ fun AccountRegisterScreen(navController: NavController) {
         }
 
         Spacer(modifier = Modifier.height(12.dp))
-
 
         Text(
             modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -265,7 +264,7 @@ fun AccountRegisterScreen(navController: NavController) {
             )
         ) {
             Text(
-                text = "Register", // Changed from SignIn to Register for clarity
+                text = "Register",
                 style = MaterialTheme.typography.titleMedium
             )
         }
